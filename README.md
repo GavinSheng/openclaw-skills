@@ -1,6 +1,8 @@
 # OpenClaw Skills Collection
 
-这是一个用于存放所有 OpenClaw 项目中使用到的技能(Skills)的集合项目。
+A collection of skills used during my personal experience with OpenClaw, including both self-developed and community-contributed ones.
+
+这是我在 OpenClaw 个人使用体验过程中积累的一系列技能集合，包含自己开发的和社区贡献的技能。
 
 ## Claude Code Skills 规范
 
