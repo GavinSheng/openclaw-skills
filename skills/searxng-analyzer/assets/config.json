@@ -1,0 +1,20 @@
+{
+  "processing_options": {
+    "max_urls_to_fetch": 10,
+    "fetch_timeout_seconds": 10,
+    "supported_formats": ["searxng_results"],
+    "analysis_depth": "standard"
+  },
+  "api_config": {
+    "model": "qwen3-max",
+    "temperature": 0.3,
+    "max_tokens": 2000
+  },
+  "output_format": {
+    "markdown": {
+      "include_sources": true,
+      "include_errors": true,
+      "max_content_preview": 500
+    }
+  }
+}

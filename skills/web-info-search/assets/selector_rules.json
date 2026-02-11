@@ -1,0 +1,34 @@
+{
+  "site_configs": {
+    "wikipedia.org": {
+      "selectors": {
+        "title": "h1#firstHeading",
+        "content": "#mw-content-text",
+        "links": ".mw-parser-output a[href^='/wiki/']",
+        "images": ".mw-parser-output .image"
+      },
+      "delay": 1000,
+      "respect_robots_txt": true
+    },
+    "news.ycombinator.com": {
+      "selectors": {
+        "title": ".titleline > a",
+        "content": ".comment",
+        "links": ".titleline > a",
+        "images": "img"
+      },
+      "delay": 2000,
+      "respect_robots_txt": true
+    },
+    "default": {
+      "selectors": {
+        "title": "title",
+        "content": "body",
+        "links": "a[href]",
+        "images": "img[src]"
+      },
+      "delay": 1000,
+      "respect_robots_txt": true
+    }
+  }
+}

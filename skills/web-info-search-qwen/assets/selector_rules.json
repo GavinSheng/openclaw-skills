@@ -1,0 +1,44 @@
+{
+  "site_configs": {
+    "sogou.com": {
+      "selectors": {
+        "title": "h3 a",
+        "content": ".vrwrap",
+        "links": "h3 a",
+        "images": "img"
+      },
+      "delay": 1000,
+      "respect_robots_txt": true
+    },
+    "so.com": {
+      "selectors": {
+        "title": "h3 a",
+        "content": ".res-desc",
+        "links": "h3 a",
+        "images": "img"
+      },
+      "delay": 1000,
+      "respect_robots_txt": true
+    },
+    "bing.com": {
+      "selectors": {
+        "title": "h2 a",
+        "content": ".b_caption",
+        "links": "h2 a",
+        "images": "img"
+      },
+      "delay": 1000,
+      "respect_robots_txt": true
+    },
+    "default": {
+      "selectors": {
+        "title": "title",
+        "content": "body",
+        "links": "a[href]",
+        "images": "img[src]"
+      },
+      "delay": 1000,
+      "respect_robots_txt": true
+    }
+  }
+}

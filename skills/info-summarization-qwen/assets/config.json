@@ -1,0 +1,24 @@
+{
+  "processing_options": {
+    "default_summary_length": "medium",
+    "max_input_characters": 10000,
+    "supported_languages": ["en", "zh"],
+    "analysis_depth": "standard"
+  },
+  "api_config": {
+    "model": "qwen3-max",
+    "temperature": 0.3,
+    "max_tokens": 2000
+  },
+  "output_format": {
+    "summary": {
+      "short": {"ratio": 0.1, "max_sentences": 3},
+      "medium": {"ratio": 0.25, "max_sentences": 7},
+      "long": {"ratio": 0.5, "max_sentences": 15}
+    },
+    "key_points": {
+      "max_points": 10,
+      "include_context": true
+    }
+  }
+}
