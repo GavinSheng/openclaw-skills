@@ -294,9 +294,9 @@ async def web_search(query: str, num_results: int = 10) -> Dict[str, Any]:
     }
 
 
-async def web_fetch(url: str) -> Dict[str, Any]:
+async def fetch_url_content_http(url: str) -> Dict[str, Any]:
     """
-    Fetch and extract content from a web page.
+    Fetch and extract content from a web page using standard HTTP requests.
 
     Args:
         url: URL to fetch content from
@@ -310,12 +310,21 @@ async def web_fetch(url: str) -> Dict[str, Any]:
         # Handle proxy configuration
         proxy = os.environ.get('HTTPS_PROXY') or os.environ.get('HTTP_PROXY')
 
-        # Create client configuration with proxy if available
+        # Create headers optimized for content extraction, mimicking a real browser
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate',
-            'Cache-Control': 'no-cache'
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+            'Sec-Ch-Ua': '"Google Chrome";v="91", "Chromium";v="91", ";Not-A.Brand";v="99"',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Upgrade-Insecure-Requests': '1',
+            'Referer': 'https://www.google.com/',
         }
 
         client_params = {
@@ -332,7 +341,7 @@ async def web_fetch(url: str) -> Dict[str, Any]:
             if response.status_code != 200:
                 return {
                     "success": False,
-                    "error": f"HTTP {response.status_code} - May be blocked in your region",
+                    "error": f"HTTP {response.status_code} - Could not fetch the webpage",
                     "url": url
                 }
 
@@ -343,13 +352,56 @@ async def web_fetch(url: str) -> Dict[str, Any]:
             title_match = re.search(r'<title[^>]*>(.*?)</title>', content, re.IGNORECASE | re.DOTALL)
             title = title_match.group(1).strip() if title_match else "No title"
 
-            # Extract main content (basic approach)
+            # Extract main content (try common article selectors)
+            # Look for main content in common tags
+            content_patterns = [
+                r'<article[^>]*>(.*?)</article>',
+                r'<div[^>]*class="[^"]*article[^"]*"[^>]*>(.*?)</div>',
+                r'<div[^>]*class="[^"]*content[^"]*"[^>]*>(.*?)</div>',
+                r'<div[^>]*class="[^"]*post[^"]*"[^>]*>(.*?)</div>',
+                r'<main[^>]*>(.*?)</main>',
+                r'<div[^>]*id="[^"]*article[^"]*"[^>]*>(.*?)</div>',
+                r'<div[^>]*id="[^"]*content[^"]*"[^>]*>(.*?)</div>',
+            ]
+
+            main_content = ""
+            for pattern in content_patterns:
+                match = re.search(pattern, content, re.IGNORECASE | re.DOTALL)
+                if match:
+                    main_content = match.group(1)
+                    break
+
+            # If no common pattern found, extract text from body
+            if not main_content:
+                body_match = re.search(r'<body[^>]*>(.*?)</body>', content, re.IGNORECASE | re.DOTALL)
+                if body_match:
+                    main_content = body_match.group(1)
+                else:
+                    main_content = content
+
             # Remove script and style elements
-            clean_content = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', content, flags=re.DOTALL)
-            # Remove HTML tags while preserving text
-            text_only = re.sub(r'<[^>]+>', ' ', clean_content)
-            # Normalize whitespace
-            main_text = ' '.join(text_only.split())
+            clean_content = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', main_content, flags=re.DOTALL)
+            # Remove comments
+            clean_content = re.sub(r'<!--.*?-->', ' ', clean_content, flags=re.DOTALL)
+            # Remove extra whitespace
+            clean_content = re.sub(r'\s+', ' ', clean_content)
+
+            # Remove common non-content elements (navigation, ads, etc.)
+            non_content_patterns = [
+                r'<nav[^>]*>.*?</nav>',
+                r'<footer[^>]*>.*?</footer>',
+                r'<header[^>]*>.*?</header>',
+                r'<aside[^>]*>.*?</aside>',
+                r'<div[^>]*class="[^"]*(nav|menu|sidebar|advertisement|ads|banner)[^"]*"[^>]*>.*?</div>',
+                r'<section[^>]*class="[^"]*(nav|menu|sidebar|advertisement|ads|banner)[^"]*"[^>]*>.*?</section>',
+            ]
+
+            for pattern in non_content_patterns:
+                clean_content = re.sub(pattern, ' ', clean_content, flags=re.IGNORECASE | re.DOTALL)
+
+            # Further clean up
+            clean_content = re.sub(r'<[^>]+>', ' ', clean_content)  # Remove all remaining tags
+            main_text = ' '.join(clean_content.split())
 
             # Extract links
             link_pattern = r'<a[^>]+href\s*=\s*["\']([^"\']+)["\'][^>]*>'
@@ -369,6 +421,24 @@ async def web_fetch(url: str) -> Dict[str, Any]:
                 absolute_img = urljoin(url, img)
                 absolute_images.append(absolute_img)
 
+            # Extract meta description if available
+            meta_desc_match = re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']*)["\']', content, re.IGNORECASE)
+            meta_description = meta_desc_match.group(1) if meta_desc_match else ""
+
+            # Extract publication date if available
+            date_patterns = [
+                r'<time[^>]+datetime=["\']([^"\']*)["\']',
+                r'<time[^>]+content=["\']([^"\']*)["\']',
+                r'datetime=["\']([^"\']*)["\']',
+                r'(\d{4}-\d{2}-\d{2}|\d{2}/\d{2}/\d{4}|\d{4}/\d{2}/\d{2})',
+            ]
+            pub_date = ""
+            for pattern in date_patterns:
+                date_match = re.search(pattern, content, re.IGNORECASE)
+                if date_match:
+                    pub_date = date_match.group(1)
+                    break
+
             return {
                 "success": True,
                 "url": url,
@@ -379,21 +449,235 @@ async def web_fetch(url: str) -> Dict[str, Any]:
                 "images_count": len(absolute_images),
                 "status_code": response.status_code,
                 "fetch_duration": fetch_duration,
-                "headers": dict(response.headers)
+                "headers": dict(response.headers),
+                "meta_description": meta_description,
+                "publication_date": pub_date,
+                "raw_content_preview": main_text[:1000],  # First 1000 chars as preview
+                "method": "http"
             }
 
     except httpx.ConnectError:
         return {
             "success": False,
-            "error": "Connection failed - URL may be blocked in your region (e.g., due to GFW in China) or proxy misconfigured",
+            "error": "Connection failed - URL may be blocked in your region or inaccessible",
             "url": url
         }
     except Exception as e:
         return {
             "success": False,
-            "error": f"Error occurred while fetching: {str(e)} - May be due to regional restrictions or proxy issues",
+            "error": f"Error occurred while fetching: {str(e)}",
             "url": url
         }
+
+
+async def fetch_url_content_playwright(url: str) -> Dict[str, Any]:
+    """
+    Fetch and extract content from a web page using Playwright browser automation.
+    This method can handle JavaScript-rendered content and anti-bot measures.
+
+    Args:
+        url: URL to fetch content from
+
+    Returns:
+        Dictionary containing page content and metadata
+    """
+    try:
+        from playwright.async_api import async_playwright
+
+        start_time = time.time()
+
+        async with async_playwright() as p:
+            # Launch browser with stealth options
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-extensions',
+                    '--disable-plugins',
+                    '--disable-images',  # Optionally disable images for faster loading
+                    '--disable-javascript',  # Only if JS is not needed
+                ]
+            )
+
+            context = await browser.new_context(
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                viewport={'width': 1920, 'height': 1080},
+                extra_http_headers={
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Cache-Control': 'no-cache',
+                    'Sec-Ch-Ua': '"Google Chrome";v="91", "Chromium";v="91", ";Not-A.Brand";v="99"',
+                    'Sec-Ch-Ua-Mobile': '?0',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Upgrade-Insecure-Requests': '1',
+                },
+                java_script_enabled=True,  # Enable JavaScript as many sites require it
+                bypass_csp=True
+            )
+
+            page = await context.new_page()
+
+            # Navigate to the page
+            await page.goto(url, wait_until="networkidle", timeout=30000)
+
+            # Wait for page to load and execute JavaScript
+            await page.wait_for_timeout(3000)  # Wait additional time for dynamic content
+
+            # Get page content after JavaScript execution
+            content = await page.content()
+            title = await page.title()
+
+            # Close browser
+            await browser.close()
+
+            fetch_duration = time.time() - start_time
+
+            # Process the content similar to HTTP method
+            # Extract main content (try common article selectors)
+            content_patterns = [
+                r'<article[^>]*>(.*?)</article>',
+                r'<div[^>]*class="[^"]*article[^"]*"[^>]*>(.*?)</div>',
+                r'<div[^>]*class="[^"]*content[^"]*"[^>]*>(.*?)</div>',
+                r'<div[^>]*class="[^"]*post[^"]*"[^>]*>(.*?)</div>',
+                r'<main[^>]*>(.*?)</main>',
+                r'<div[^>]*id="[^"]*article[^"]*"[^>]*>(.*?)</div>',
+                r'<div[^>]*id="[^"]*content[^"]*"[^>]*>(.*?)</div>',
+            ]
+
+            main_content = ""
+            for pattern in content_patterns:
+                match = re.search(pattern, content, re.IGNORECASE | re.DOTALL)
+                if match:
+                    main_content = match.group(1)
+                    break
+
+            # If no common pattern found, extract text from body
+            if not main_content:
+                body_match = re.search(r'<body[^>]*>(.*?)</body>', content, re.IGNORECASE | re.DOTALL)
+                if body_match:
+                    main_content = body_match.group(1)
+                else:
+                    main_content = content
+
+            # Remove script and style elements
+            clean_content = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', main_content, flags=re.DOTALL)
+            # Remove comments
+            clean_content = re.sub(r'<!--.*?-->', ' ', clean_content, flags=re.DOTALL)
+            # Remove extra whitespace
+            clean_content = re.sub(r'\s+', ' ', clean_content)
+
+            # Remove common non-content elements (navigation, ads, etc.)
+            non_content_patterns = [
+                r'<nav[^>]*>.*?</nav>',
+                r'<footer[^>]*>.*?</footer>',
+                r'<header[^>]*>.*?</header>',
+                r'<aside[^>]*>.*?</aside>',
+                r'<div[^>]*class="[^"]*(nav|menu|sidebar|advertisement|ads|banner)[^"]*"[^>]*>.*?</div>',
+                r'<section[^>]*class="[^"]*(nav|menu|sidebar|advertisement|ads|banner)[^"]*"[^>]*>.*?</section>',
+            ]
+
+            for pattern in non_content_patterns:
+                clean_content = re.sub(pattern, ' ', clean_content, flags=re.IGNORECASE | re.DOTALL)
+
+            # Further clean up
+            clean_content = re.sub(r'<[^>]+>', ' ', clean_content)  # Remove all remaining tags
+            main_text = ' '.join(clean_content.split())
+
+            # Extract links
+            link_pattern = r'<a[^>]+href\s*=\s*["\']([^"\']+)["\'][^>]*>'
+            raw_links = re.findall(link_pattern, content, re.IGNORECASE)
+            # Resolve relative URLs
+            absolute_links = []
+            for link in raw_links:
+                absolute_link = urljoin(url, link)
+                absolute_links.append(absolute_link)
+
+            # Extract images
+            img_pattern = r'<img[^>]+src\s*=\s*["\']([^"\']+)["\'][^>]*>'
+            raw_imgs = re.findall(img_pattern, content, re.IGNORECASE)
+            # Resolve relative URLs
+            absolute_images = []
+            for img in raw_imgs:
+                absolute_img = urljoin(url, img)
+                absolute_images.append(absolute_img)
+
+            # Extract meta description if available
+            meta_desc_match = re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']*)["\']', content, re.IGNORECASE)
+            meta_description = meta_desc_match.group(1) if meta_desc_match else ""
+
+            # Extract publication date if available
+            date_patterns = [
+                r'<time[^>]+datetime=["\']([^"\']*)["\']',
+                r'<time[^>]+content=["\']([^"\']*)["\']',
+                r'datetime=["\']([^"\']*)["\']',
+                r'(\d{4}-\d{2}-\d{2}|\d{2}/\d{2}/\d{4}|\d{4}/\d{2}/\d{2})',
+            ]
+            pub_date = ""
+            for pattern in date_patterns:
+                date_match = re.search(pattern, content, re.IGNORECASE)
+                if date_match:
+                    pub_date = date_match.group(1)
+                    break
+
+            return {
+                "success": True,
+                "url": url,
+                "title": title,
+                "content": main_text[:4000],  # Truncate to 4000 chars
+                "full_content_length": len(main_text),
+                "links_count": len(absolute_links),
+                "images_count": len(absolute_images),
+                "status_code": 200,  # Assuming successful fetch with Playwright
+                "fetch_duration": fetch_duration,
+                "headers": {},
+                "meta_description": meta_description,
+                "publication_date": pub_date,
+                "raw_content_preview": main_text[:1000],  # First 1000 chars as preview
+                "method": "playwright"
+            }
+
+    except ImportError:
+        return {
+            "success": False,
+            "error": "Playwright is not installed. Install with 'pip install playwright' and run 'playwright install'",
+            "url": url
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Error occurred while fetching with Playwright: {str(e)}",
+            "url": url
+        }
+
+
+async def web_fetch(url: str) -> Dict[str, Any]:
+    """
+    Fetch and extract content from a web page with fallback from HTTP to Playwright methods.
+
+    Args:
+        url: URL to fetch content from
+
+    Returns:
+        Dictionary containing page content and metadata
+    """
+    # First try with standard HTTP
+    result = await fetch_url_content_http(url)
+
+    # If HTTP fails with 401/403/406 or similar protection errors, try Playwright
+    if not result["success"] and any(code in result["error"] for code in ["401", "403", "406", "429", "anti-bot", "robot", "captcha", "datadome", "cloudfront"]):
+        print(f"Standard HTTP request failed, trying with Playwright browser automation for {url}...")
+        result = await fetch_url_content_playwright(url)
+    elif not result["success"]:
+        # If HTTP fails completely, try Playwright anyway
+        print(f"Standard HTTP request failed, falling back to Playwright browser automation for {url}...")
+        result = await fetch_url_content_playwright(url)
+
+    return result
 
 
 def handler(request, context):

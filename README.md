@@ -37,18 +37,22 @@ openclaw-skills/
 ```bash
 # 为web-info-search技能安装依赖
 pip install -r skills/web-info-search/requirements.txt
+playwright install
 
 # 为web-info-search-qwen技能安装依赖
 pip install -r skills/web-info-search-qwen/requirements.txt
+playwright install
 
 # 为info-summarization-qwen技能安装依赖
 pip install -r skills/info-summarization-qwen/requirements.txt
 
 # 为searxng-analyzer技能安装依赖
 pip install -r skills/searxng-analyzer/requirements.txt
+playwright install
 
 # 为searxng-article-analyzer技能安装依赖
 pip install -r skills/searxng-article-analyzer/requirements.txt
+playwright install
 ```
 
 ## 使用方法
@@ -57,6 +61,15 @@ pip install -r skills/searxng-article-analyzer/requirements.txt
 
 1. 让 Claude 自动决定何时使用技能（基于 description 字段）
 2. 通过 `/skill-name` 直接调用技能
+
+## 防反爬虫增强
+
+项目中的多个技能已升级以应对反爬虫保护机制：
+
+- **增强的技能**: `searxng-article-analyzer`, `searxng-analyzer`, `web-info-search`, `web-info-search-qwen`
+- **双访问机制**: 自动在标准HTTP请求和Playwright浏览器自动化之间切换
+- **智能回退**: 当遇到401/403/406/429错误或检测到反爬虫机制时自动切换到浏览器自动化
+- **支持的防护**: 有效应对Datadome、CloudFront、验证码和其他反机器人系统
 
 ## 阿里云MoltBot平台集成
 

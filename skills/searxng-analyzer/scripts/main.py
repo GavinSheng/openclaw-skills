@@ -5,6 +5,7 @@ SearXNG Analyzer Skill - Main Execution Script
 Analyzes SearXNG search results by fetching content from detailed list URLs,
 extracting details, and summarizing using qwen3-max in markdown format.
 This script is meant to be executed directly by Claude.
+Supports both standard HTTP requests and Playwright browser automation for anti-anti-spider purposes.
 """
 
 import argparse
@@ -15,11 +16,12 @@ import re
 import os
 from typing import Dict, Any, List
 import httpx
+import time
 
 
-async def fetch_url_content(url: str, timeout: int = 10) -> str:
+async def fetch_url_content_http(url: str, timeout: int = 10) -> str:
     """
-    Fetch content from a URL
+    Fetch content from a URL using standard HTTP requests.
 
     Args:
         url: URL to fetch content from
@@ -29,7 +31,19 @@ async def fetch_url_content(url: str, timeout: int = 10) -> str:
         Fetched content as string, or error message
     """
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Sec-Ch-Ua": '"Google Chrome";v="91", "Chromium";v="91", ";Not-A.Brand";v="99"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Upgrade-Insecure-Requests": "1",
+        "Referer": "https://www.google.com/",
     }
 
     try:
@@ -39,6 +53,96 @@ async def fetch_url_content(url: str, timeout: int = 10) -> str:
             return response.text
     except Exception as e:
         return f"Error fetching {url}: {str(e)}"
+
+
+async def fetch_url_content_playwright(url: str, timeout: int = 30) -> str:
+    """
+    Fetch content from a URL using Playwright browser automation.
+    This method can handle JavaScript-rendered content and anti-bot measures.
+
+    Args:
+        url: URL to fetch content from
+        timeout: Request timeout in seconds
+
+    Returns:
+        Fetched content as string, or error message
+    """
+    try:
+        from playwright.async_api import async_playwright
+
+        async with async_playwright() as p:
+            # Launch browser with stealth options
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-extensions",
+                    "--disable-plugins",
+                    "--disable-images",  # Optionally disable images for faster loading
+                ]
+            )
+
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                viewport={"width": 1920, "height": 1080},
+                extra_http_headers={
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Cache-Control": "no-cache",
+                    "Sec-Ch-Ua": '"Google Chrome";v="91", "Chromium";v="91", ";Not-A.Brand";v="99"',
+                    "Sec-Ch-Ua-Mobile": "?0",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "none",
+                    "Upgrade-Insecure-Requests": "1",
+                },
+                java_script_enabled=True,  # Enable JavaScript as many sites require it
+                bypass_csp=True
+            )
+
+            page = await context.new_page()
+
+            # Navigate to the page
+            await page.goto(url, wait_until="networkidle", timeout=timeout*1000)
+
+            # Wait for page to load and execute JavaScript
+            await page.wait_for_timeout(2000)  # Wait additional time for dynamic content
+
+            # Get page content after JavaScript execution
+            content = await page.content()
+
+            # Close browser
+            await browser.close()
+
+            return content
+
+    except ImportError:
+        return f"Error fetching {url}: Playwright is not installed. Install with 'pip install playwright' and run 'playwright install'"
+    except Exception as e:
+        return f"Error fetching {url} with Playwright: {str(e)}"
+
+
+async def fetch_url_content(url: str, timeout: int = 10) -> str:
+    """
+    Fetch content from a URL with fallback from HTTP to Playwright methods.
+    """
+    # First try with standard HTTP
+    content = await fetch_url_content_http(url, timeout)
+
+    # Check if the result indicates an error that might be due to anti-bot measures
+    error_indicators = ["401", "403", "406", "429", "anti-bot", "robot", "captcha", "datadome", "cloudfront", "Access Denied", "Forbidden"]
+    if isinstance(content, str) and any(indicator in content.lower() or indicator in str(url).lower() for indicator in error_indicators):
+        print(f"Standard HTTP request failed for {url}, trying with Playwright browser automation...")
+        content = await fetch_url_content_playwright(url, timeout)
+    elif content.startswith("Error"):
+        # If HTTP fails completely, try Playwright anyway
+        print(f"Standard HTTP request failed for {url}, falling back to Playwright browser automation...")
+        content = await fetch_url_content_playwright(url, timeout)
+
+    return content
 
 
 def extract_urls_from_searxng_results(searxng_text: str) -> List[str]:

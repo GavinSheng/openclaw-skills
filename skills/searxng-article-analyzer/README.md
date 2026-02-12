@@ -8,11 +8,15 @@
 - 提供不超过300字的概要，突出核心观点和价值
 - 提供详细分析，避免原文照抄，适合公众号发布
 - 格式化输出适合社交媒体发布
+- 具备反反爬虫能力，自动检测并绕过常见防护机制（如401/403/429错误、Datadome、CloudFront等）
+- 自动选择HTTP请求或Playwright浏览器自动化方法，提高抓取成功率
 
 ## 安装依赖
 
 ```bash
 pip install httpx
+pip install playwright
+playwright install
 ```
 
 ## 使用方法
