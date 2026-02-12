@@ -137,17 +137,23 @@ def call_qwen_summarization(content_list: List[Dict[str, str]], original_results
 [综合分析结论]
 """
 
-    # Call the LLM for summarization using the MoltBot standard interface
-    response = context.llm.generate(
-        prompt=prompt,
-        model="qwen3-max-2026-01-23",  # 使用完整模型 ID
-        temperature=0.3,
-        max_tokens=2000
-    )
+    try:
+        # Call the LLM for summarization using the MoltBot standard interface
+        response = context.llm.generate(
+            prompt=prompt,
+            model="qwen3-max-2026-01-23",  # 使用完整模型 ID
+            temperature=0.3,
+            max_tokens=2000
+        )
 
-    duration = time.time() - start_time
+        if response is None:
+            return "# 错误\n\n大语言模型调用失败：模型返回了空响应。请检查模型服务是否正常运行。"
 
-    return response
+        return response
+
+    except Exception as e:
+        error_msg = f"# 错误\n\n大语言模型调用失败：{str(e)}\n\n请检查：\n- 模型服务是否正常运行\n- 模型ID是否正确\n- API密钥是否有效\n- 网络连接是否正常"
+        return error_msg
 
 
 async def analyze_searxng_results(searxng_results: str, context: Any) -> Dict[str, Any]:

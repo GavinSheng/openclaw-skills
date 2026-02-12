@@ -396,7 +396,45 @@ async def web_fetch(url: str) -> Dict[str, Any]:
         }
 
 
-async def main():
+def handler(request, context):
+    """
+    MoltBot platform compatible handler for web search and fetch operations
+
+    Args:
+        request: Request dictionary containing the input
+        context: Context object containing the LLM API interface
+
+    Returns:
+        Dictionary containing search or fetch results
+    """
+    import asyncio
+
+    search_query = request.get("search", "")
+    fetch_url = request.get("fetch", "")
+    num_results = request.get("num_results", 10)
+
+    try:
+        if search_query:
+            # Run web search
+            result = asyncio.run(web_search(search_query, num_results))
+        elif fetch_url:
+            # Run web fetch
+            result = asyncio.run(web_fetch(fetch_url))
+        else:
+            return {
+                "success": False,
+                "error": "Missing 'search' or 'fetch' in request"
+            }
+
+        return result
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Operation failed: {str(e)}"
+        }
+
+
+def main():
     parser = argparse.ArgumentParser(description='Web Information Search Skill')
     parser.add_argument('--search', type=str, help='Search query string')
     parser.add_argument('--fetch', type=str, help='URL to fetch content from')
@@ -405,9 +443,11 @@ async def main():
     args = parser.parse_args()
 
     if args.search:
-        result = await web_search(args.search, args.num_results)
+        import asyncio
+        result = asyncio.run(web_search(args.search, args.num_results))
     elif args.fetch:
-        result = await web_fetch(args.fetch)
+        import asyncio
+        result = asyncio.run(web_fetch(args.fetch))
     else:
         parser.print_help()
         sys.exit(1)
@@ -417,4 +457,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

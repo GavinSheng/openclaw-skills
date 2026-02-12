@@ -367,19 +367,25 @@ def handler(request, context):
     fetch_url = request.get("fetch", "")
     num_results = request.get("num_results", 10)
 
-    if search_query:
-        # Run web search
-        result = asyncio.run(web_search(search_query, num_results))
-    elif fetch_url:
-        # Run web fetch
-        result = asyncio.run(web_fetch(fetch_url))
-    else:
+    try:
+        if search_query:
+            # Run web search
+            result = asyncio.run(web_search(search_query, num_results))
+        elif fetch_url:
+            # Run web fetch
+            result = asyncio.run(web_fetch(fetch_url))
+        else:
+            return {
+                "success": False,
+                "error": "Missing 'search' or 'fetch' in request"
+            }
+
+        return result
+    except Exception as e:
         return {
             "success": False,
-            "error": "Missing 'search' or 'fetch' in request"
+            "error": f"Operation failed: {str(e)}"
         }
-
-    return result
 
 
 def main():

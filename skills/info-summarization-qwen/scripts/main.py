@@ -30,77 +30,106 @@ def call_qwen_summarization(text: str, action: str, context: Any, target_length:
     import time
     start_time = time.time()
 
-    if action == "summarize":
-        prompt = f"""请对以下内容进行总结：
+    try:
+        if action == "summarize":
+            prompt = f"""请对以下内容进行总结：
 
 {text}
 
 请提供一个{target_length}长度的总结。"""
 
-        response = context.llm.generate(
-            prompt=prompt,
-            model="qwen3-max-2026-01-23",  # 使用完整模型 ID
-            temperature=0.3,
-            max_tokens=500
-        )
+            response = context.llm.generate(
+                prompt=prompt,
+                model="qwen3-max-2026-01-23",  # 使用完整模型 ID
+                temperature=0.3,
+                max_tokens=500
+            )
 
-        result = {
-            "success": True,
-            "original_content_length": len(text),
-            "summary": response,
-            "processing_duration": time.time() - start_time,
-            "model_used": "qwen3-max"
-        }
+            if response is None:
+                return {
+                    "success": False,
+                    "error": "大语言模型调用失败：模型返回了空响应",
+                    "processing_duration": time.time() - start_time
+                }
 
-    elif action == "extract":
-        prompt = f"""请从以下内容中提取最重要的{max_points}个要点：
+            result = {
+                "success": True,
+                "original_content_length": len(text),
+                "summary": response,
+                "processing_duration": time.time() - start_time,
+                "model_used": "qwen3-max"
+            }
+
+        elif action == "extract":
+            prompt = f"""请从以下内容中提取最重要的{max_points}个要点：
 
 {text}
 
 请以列表形式呈现关键要点。"""
 
-        response = context.llm.generate(
-            prompt=prompt,
-            model="qwen3-max-2026-01-23",  # 使用完整模型 ID
-            temperature=0.3,
-            max_tokens=500
-        )
+            response = context.llm.generate(
+                prompt=prompt,
+                model="qwen3-max-2026-01-23",  # 使用完整模型 ID
+                temperature=0.3,
+                max_tokens=500
+            )
 
-        result = {
-            "success": True,
-            "original_content_length": len(text),
-            "key_points": response.split('\n'),  # 假设返回值是换行分隔的要点
-            "points_extracted": max_points,
-            "processing_duration": time.time() - start_time,
-            "model_used": "qwen3-max"
-        }
+            if response is None:
+                return {
+                    "success": False,
+                    "error": "大语言模型调用失败：模型返回了空响应",
+                    "processing_duration": time.time() - start_time
+                }
 
-    elif action == "analyze":
-        prompt = f"""请对以下内容进行全面分析：
+            result = {
+                "success": True,
+                "original_content_length": len(text),
+                "key_points": response.split('\n'),  # 假设返回值是换行分隔的要点
+                "points_extracted": max_points,
+                "processing_duration": time.time() - start_time,
+                "model_used": "qwen3-max"
+            }
+
+        elif action == "analyze":
+            prompt = f"""请对以下内容进行全面分析：
 
 {text}
 
 分析应包括主要内容、关键概念、潜在影响等。"""
 
-        response = context.llm.generate(
-            prompt=prompt,
-            model="qwen3-max-2026-01-23",  # 使用完整模型 ID
-            temperature=0.3,
-            max_tokens=1000
-        )
+            response = context.llm.generate(
+                prompt=prompt,
+                model="qwen3-max-2026-01-23",  # 使用完整模型 ID
+                temperature=0.3,
+                max_tokens=1000
+            )
 
-        result = {
-            "success": True,
-            "original_content_length": len(text),
-            "analysis": response,
-            "processing_duration": time.time() - start_time,
-            "model_used": "qwen3-max"
-        }
+            if response is None:
+                return {
+                    "success": False,
+                    "error": "大语言模型调用失败：模型返回了空响应",
+                    "processing_duration": time.time() - start_time
+                }
 
-    else:
+            result = {
+                "success": True,
+                "original_content_length": len(text),
+                "analysis": response,
+                "processing_duration": time.time() - start_time,
+                "model_used": "qwen3-max"
+            }
+
+        else:
+            result = {
+                "success": False,
+                "error": f"未知操作: {action}",
+                "processing_duration": time.time() - start_time
+            }
+
+    except Exception as e:
         result = {
             "success": False,
-            "error": f"Unknown action: {action}",
+            "error": f"大语言模型调用失败：{str(e)}\n\n请检查：\n- 模型服务是否正常运行\n- 模型ID是否正确\n- API密钥是否有效\n- 网络连接是否正常",
             "processing_duration": time.time() - start_time
         }
 
