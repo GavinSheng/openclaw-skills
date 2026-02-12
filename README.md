@@ -19,7 +19,8 @@ openclaw-skills/
     ├── web-info-search/                         # Web信息搜索技能
     ├── web-info-search-qwen/                    # Web信息搜索技能（Qwen优化版）
     ├── info-summarization-qwen/                 # 信息总结技能（Qwen版）
-    └── searxng-analyzer/                        # SearXNG分析器
+    ├── searxng-analyzer/                        # SearXNG分析器
+    └── article-analyzer/                        # 文章分析器
 ```
 
 ## 当前已有的技能
@@ -28,6 +29,7 @@ openclaw-skills/
 - `web-info-search-qwen`: Web信息搜索技能（Qwen优化版），针对中文环境优化
 - `info-summarization-qwen`: 信息总结技能（Qwen版），使用Qwen3-Max模型进行内容总结
 - `searxng-analyzer`: SearXNG分析器，分析SearXNG搜索结果并提取关键信息
+- `article-analyzer`: 文章分析器，深度分析单篇文章并生成适合公众号发布的概要和详情
 - `skill-creator`: 技能创建工具，用于快速创建和打包新的技能
 
 ## 安装依赖
@@ -44,6 +46,9 @@ pip install -r skills/info-summarization-qwen/requirements.txt
 
 # 为searxng-analyzer技能安装依赖
 pip install -r skills/searxng-analyzer/requirements.txt
+
+# 为article-analyzer技能安装依赖
+pip install -r skills/article-analyzer/requirements.txt
 ```
 
 ## 使用方法

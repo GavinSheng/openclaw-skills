@@ -1,0 +1,28 @@
+{
+  "formatting_options": {
+    "summary_max_length": 300,
+    "summary_style": "concise",
+    "detail_style": "structured_for_publication",
+    "sections": [
+      "introduction",
+      "key_points",
+      "analysis",
+      "conclusion"
+    ]
+  },
+  "content_filters": [
+    "remove_direct_copying",
+    "avoid_copyright_issues",
+    "paraphrase_content",
+    "maintain_core_meaning"
+  ],
+  "public_account_requirements": {
+    "image_guidelines": "suggest_relevant_images",
+    "structure_recommendations": "clear_paragraphs",
+    "engagement_tips": [
+      "start_with_hook",
+      "include_key_insights",
+      "provide_actionable_takeaways"
+    ]
+  }
+}
