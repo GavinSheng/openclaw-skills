@@ -10,6 +10,7 @@ import argparse
 import asyncio
 import json
 import sys
+import os
 import re
 from typing import Dict, Any
 import httpx
@@ -40,11 +41,7 @@ async def fetch_article_content(url: str) -> Dict[str, Any]:
         }
 
         # Handle proxy configuration
-        proxy = None
-        if 'HTTPS_PROXY' in environ:
-            proxy = environ['HTTPS_PROXY']
-        elif 'HTTP_PROXY' in environ:
-            proxy = environ['HTTP_PROXY']
+        proxy = os.environ.get('HTTPS_PROXY') or os.environ.get('HTTP_PROXY')
 
         client_params = {
             'timeout': 30.0,
@@ -280,7 +277,6 @@ def handler(request, context):
     Returns:
         Dictionary containing article analysis results
     """
-    import os
     article_url = request.get("url", "") or request.get("article_url", "")
 
     if not article_url:
@@ -321,7 +317,7 @@ def main():
         class MockLLM:
             def generate(self, prompt, model, temperature, max_tokens):
                 # Simulate LLM response for command-line testing
-                return f"模拟分析结果:\n\n## 概要\n这是对 {args.url} 的模拟概要，不超过300字。\n\n## 详情\n这是对 {args.url} 的详细分析，整理了原文内容并优化为适合公众号发布的格式。"
+                return f"模拟分析结果:\n\n## 概要\n这是对 {args.url} 的模拟概要，不超过300字，突出核心观点和价值，适合快速了解文章主旨。\n\n## 详情\n这是对 {args.url} 的详细分析，包含背景介绍、核心内容、关键数据、深度分析和总结展望，组织成适合公众号发布的格式。"
 
         def __init__(self):
             self.llm = self.MockLLM()

@@ -1,9 +1,9 @@
 ---
-name: article-analyzer
+name: searxng-article-analyzer
 description: Analyze individual articles in depth to generate suitable content for public account publishing. Extracts content from URLs and provides both summary (under 300 words) and detailed analysis parts, with proper formatting for social media publication. Use when users want to analyze and repurpose articles for public account posts.
 ---
 
-# Article Analyzer Skill
+# SearXNG Article Analyzer Skill
 
 This skill provides detailed analysis of individual articles to generate suitable content for public account (WeChat Official Account, etc.) publishing. It extracts content from URLs and provides both summary and detailed analysis parts.
 

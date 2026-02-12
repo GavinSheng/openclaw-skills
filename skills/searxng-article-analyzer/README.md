@@ -1,6 +1,6 @@
-# Article Analyzer Skill
+# SearXNG Article Analyzer Skill
 
-这是一个专门用于深度分析单篇文章的技能，可生成适合公众号发布的概要和详情。
+这是一个专门用于深度分析单篇文章的技能，可生成适合公众号发布的概要和详情，通常配合SearXNG搜索结果使用。
 
 ## 功能
 
