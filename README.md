@@ -20,7 +20,8 @@ openclaw-skills/
     ├── web-info-search-qwen/                    # Web信息搜索技能（Qwen优化版）
     ├── info-summarization-qwen/                 # 信息总结技能（Qwen版）
     ├── searxng-analyzer/                        # SearXNG分析器
-    └── searxng-article-analyzer/                # SearXNG文章分析器
+    ├── searxng-article-analyzer/                # SearXNG文章分析器
+    └── email-sender/                            # 邮件发送技能
 ```
 
 ## 当前已有的技能
@@ -30,6 +31,7 @@ openclaw-skills/
 - `info-summarization-qwen`: 信息总结技能（Qwen版），使用Qwen3-Max模型进行内容总结
 - `searxng-analyzer`: SearXNG分析器，分析SearXNG搜索结果并提取关键信息
 - `searxng-article-analyzer`: SearXNG文章分析器，深度分析单篇文章并生成适合公众号发布的概要和详情
+- `email-sender`: 邮件发送技能，将其他技能的执行结果发送到指定邮箱
 - `skill-creator`: 技能创建工具，用于快速创建和打包新的技能
 
 ## 安装依赖
