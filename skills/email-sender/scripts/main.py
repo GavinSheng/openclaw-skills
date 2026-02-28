@@ -294,14 +294,14 @@ def send_email_via_smtp(to_email: str, subject: str, body: str, from_email: str 
         # Process content according to format
         if detected_format == 'markdown':
             html_body = markdown_to_html(body)
-            # Create multipart message with both HTML and plain text versions
-            msg.attach(MIMEText(body, 'plain', 'utf-8'))  # Plain version
-            msg.attach(MIMEText(html_body, 'html', 'utf-8'))  # HTML version
+            # For markdown content, only send HTML version since email clients
+            # will render it properly (the markdown source is not needed)
+            msg.attach(MIMEText(html_body, 'html', 'utf-8'))  # HTML version only
         elif detected_format == 'html':
             # Content is already HTML, add as HTML part
             msg.attach(MIMEText(body, 'html', 'utf-8'))
         else:  # plain or unknown
-            # For plain text, create both plain and simple HTML versions
+            # For plain text, create HTML version for better rendering
             html_body = body.replace('\n', '<br>').replace('  ', '&nbsp;&nbsp;')
             msg.attach(MIMEText(body, 'plain', 'utf-8'))  # Plain version
             msg.attach(MIMEText(html_body, 'html', 'utf-8'))  # HTML version
