@@ -32,7 +32,17 @@ def markdown_to_html(markdown_text: str) -> str:
     # First, try to use the markdown library if available (recommended)
     try:
         import markdown
-        html_text = markdown.markdown(markdown_text, extensions=['extra', 'codehilite', 'fenced_code'])
+        # Use extended markdown features for better compatibility
+        html_text = markdown.markdown(markdown_text, extensions=[
+            'extra',        # Includes tables, fenced code blocks, footnotes, etc.
+            'codehilite',   # Syntax highlighting
+            'fenced_code',  # Fenced code blocks
+            'toc',          # Table of contents
+            'attr_list',    # Attribute lists
+            'def_list',     # Definition lists
+            'abbr',         # Abbreviations
+            'md_in_html'    # Markdown in HTML blocks
+        ])
     except ImportError:
         # Basic fallback conversion if markdown library is not available
         import re
