@@ -16,6 +16,151 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
+import re
+
+
+def markdown_to_html(markdown_text: str) -> str:
+    """
+    Convert Markdown content to HTML for proper email rendering.
+
+    Args:
+        markdown_text: Input markdown text
+
+    Returns:
+        Converted HTML text
+    """
+    # First, try to use the markdown library if available (recommended)
+    try:
+        import markdown
+        html_text = markdown.markdown(markdown_text, extensions=['extra', 'codehilite', 'fenced_code'])
+    except ImportError:
+        # Basic fallback conversion if markdown library is not available
+        import re
+
+        # First, handle code blocks (these should be processed first to avoid interference)
+        # Process fenced code blocks: ```lang ... ```
+        def code_block_replacer(match):
+            lang = match.group(1) if match.group(1) else ''
+            code = match.group(2)
+            # Escape HTML entities in code blocks
+            code = code.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            return f'<pre><code class="language-{lang}">{code}</code></pre>'
+
+        # Handle fenced code blocks (```lang\n...\n```)
+        markdown_text = re.sub(r'```(\w+)?\n(.*?)```', code_block_replacer, markdown_text, flags=re.DOTALL)
+
+        # Split the text into lines for processing
+        lines = markdown_text.split('\n')
+        html_lines = []
+
+        in_list = False
+        list_type = ''  # 'ul' for unordered, 'ol' for ordered
+
+        for line in lines:
+            # Check if this is a code block line (already processed)
+            if '<pre><code' in line:
+                html_lines.append(line)
+                continue
+
+            # Process headers (# Header -> <h1>Header</h1>)
+            header_match = re.match(r'^(#{1,6})\s+(.+)$', line)
+            if header_match:
+                level = len(header_match.group(1))
+                content = header_match.group(2)
+                line = f'<h{level}>{content}</h{level}>'
+                html_lines.append(line)
+                continue
+
+            # Process lists
+            ul_match = re.match(r'^(\s*)[-*]\s+(.+)$', line)
+            ol_match = re.match(r'^(\s*)([0-9]+)\.\s+(.+)$', line)
+
+            if ul_match or ol_match:
+                # Determine list type and content
+                if ul_match:
+                    indent = ul_match.group(1)
+                    content = ul_match.group(2)
+                    current_list_type = 'ul'
+                else:
+                    indent = ol_match.group(1)
+                    content = ol_match.group(3)
+                    current_list_type = 'ol'
+
+                # Calculate indent level (2 spaces = 1 level)
+                indent_level = len(indent) // 2
+
+                # If not in a list or list type changed, close previous list
+                if in_list and list_type != current_list_type:
+                    html_lines.append('</li></ul>' if list_type == 'ul' else '</li></ol>')
+                    in_list = False
+
+                # Handle list nesting
+                if not in_list:
+                    # Start new list
+                    list_tag = '<ul>' if current_list_type == 'ul' else '<ol>'
+                    html_lines.append(list_tag)
+                    in_list = True
+                    list_type = current_list_type
+
+                # Add the list item
+                html_lines.append(f'<li>{content}')
+            else:
+                # Not a list item - if we were in a list, close it
+                if in_list:
+                    html_lines.append('</li></ul>' if list_type == 'ul' else '</li></ol>')
+                    in_list = False
+
+                # Process basic inline markdown elements in non-list lines
+                # Bold: **text** or __text__
+                processed_line = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', line)
+                processed_line = re.sub(r'__(.*?)__', r'<strong>\1</strong>', processed_line)
+
+                # Italic: *text* or _text_
+                processed_line = re.sub(r'\*(.*?)\*', r'<em>\1</em>', processed_line)
+                processed_line = re.sub(r'_(.*?)_', r'<em>\1</em>', processed_line)
+
+                # Links: [text](url)
+                processed_line = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank">\1</a>', processed_line)
+
+                # Inline code: `code`
+                processed_line = re.sub(r'`([^`]+)`', r'<code>\1</code>', processed_line)
+
+                # Paragraph tags for non-empty lines that aren't already HTML tags
+                if processed_line.strip() and not processed_line.startswith('<'):
+                    processed_line = f'<p>{processed_line}</p>'
+
+                html_lines.append(processed_line)
+
+        # Close any open list at the end
+        if in_list:
+            html_lines.append('</li></ul>' if list_type == 'ul' else '</li></ol>')
+
+        html_text = '\n'.join(html_lines)
+
+    # Wrap in basic HTML template for email clients
+    full_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif, sans-serif; line-height: 1.6; color: #333; margin: 20px; }}
+        h1, h2, h3, h4, h5, h6 {{ margin-top: 1em; margin-bottom: 0.5em; color: #2c3e50; }}
+        p {{ margin: 0.8em 0; }}
+        ul, ol {{ margin: 0.8em 0; padding-left: 1.5em; }}
+        li {{ margin: 0.3em 0; }}
+        code {{ background-color: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-family: monospace; }}
+        pre {{ background-color: #f8f9fa; padding: 10px; overflow-x: auto; border-radius: 4px; margin: 0.8em 0; }}
+        pre code {{ background: none; padding: 0; }}
+        a {{ color: #3498db; text-decoration: none; }}
+        a:hover {{ text-decoration: underline; }}
+    </style>
+</head>
+<body>
+{html_text}
+</body>
+</html>"""
+
+    return full_html
 
 
 def analyze_content_and_generate_subject(content: str, context: Any) -> str:
@@ -62,7 +207,47 @@ def analyze_content_and_generate_subject(content: str, context: Any) -> str:
         return "Generated Email Subject"
 
 
-def send_email_via_smtp(to_email: str, subject: str, body: str, from_email: str = None, password: str = None) -> Dict[str, Any]:
+def detect_content_type(content: str) -> str:
+    """
+    Detect the content type of the email body.
+
+    Args:
+        content: The email content to analyze
+
+    Returns:
+        String indicating content type: 'markdown', 'html', or 'plain'
+    """
+    # Check if content already contains HTML tags
+    html_tags = ['<html', '<body', '<p>', '<h', '<div', '<span', '<a href', '<ul', '<ol', '<li', '<strong', '<em', '<b>', '<i>', '<br', '<hr', '<table', '<tr', '<td']
+    for tag in html_tags:
+        if tag in content.lower():
+            return 'html'
+
+    # Check for markdown patterns
+    markdown_patterns = [
+        r'\*\*.*?\*\*',  # Bold **text**
+        r'__.*?__',      # Bold __text__
+        r'\*.*?\*',      # Italic *text*
+        r'_.*?_',        # Italic _text_
+        r'# .*',         # Headers # title
+        r'## .*',        # Headers ## title
+        r'### .*',       # Headers ### title
+        r'- .*',         # Unordered list - item
+        r'\d+\. .*',     # Ordered list 1. item
+        r'```',          # Code blocks
+        r'`.*?`',        # Inline code
+        r'\[.*?\]\(.*?\)',  # Links [text](url)
+    ]
+
+    for pattern in markdown_patterns:
+        if re.search(pattern, content):
+            return 'markdown'
+
+    # If no clear indicators found, assume plain text
+    return 'plain'
+
+
+def send_email_via_smtp(to_email: str, subject: str, body: str, from_email: str = None, password: str = None, content_format: str = 'auto') -> Dict[str, Any]:
     """
     Send email using SMTP with provided credentials or environment variables.
 
@@ -72,6 +257,7 @@ def send_email_via_smtp(to_email: str, subject: str, body: str, from_email: str 
         body: Email body content
         from_email: Sender email address (optional, uses env var if not provided)
         password: Email password/app key (optional, uses env var if not provided)
+        content_format: Format of the content - 'auto', 'markdown', 'html', or 'plain' (default 'auto')
 
     Returns:
         Dictionary containing operation result
@@ -99,8 +285,26 @@ def send_email_via_smtp(to_email: str, subject: str, body: str, from_email: str 
         msg['To'] = to_email
         msg['Subject'] = Header(subject, 'utf-8')
 
-        # Add body to email
-        msg.attach(MIMEText(body, 'html', 'utf-8'))
+        # Process content based on format
+        if content_format == 'auto':
+            detected_format = detect_content_type(body)
+        else:
+            detected_format = content_format
+
+        # Process content according to format
+        if detected_format == 'markdown':
+            html_body = markdown_to_html(body)
+            # Create multipart message with both HTML and plain text versions
+            msg.attach(MIMEText(body, 'plain', 'utf-8'))  # Plain version
+            msg.attach(MIMEText(html_body, 'html', 'utf-8'))  # HTML version
+        elif detected_format == 'html':
+            # Content is already HTML, add as HTML part
+            msg.attach(MIMEText(body, 'html', 'utf-8'))
+        else:  # plain or unknown
+            # For plain text, create both plain and simple HTML versions
+            html_body = body.replace('\n', '<br>').replace('  ', '&nbsp;&nbsp;')
+            msg.attach(MIMEText(body, 'plain', 'utf-8'))  # Plain version
+            msg.attach(MIMEText(html_body, 'html', 'utf-8'))  # HTML version
 
         # Create SMTP session
         server = smtplib.SMTP(smtp_server, smtp_port)
@@ -117,6 +321,7 @@ def send_email_via_smtp(to_email: str, subject: str, body: str, from_email: str 
             "message": f"Email sent successfully to {to_email}",
             "to_email": to_email,
             "subject": subject,
+            "content_format": detected_format,
             "processing_duration": time.time() - start_time
         }
 
@@ -165,7 +370,9 @@ def send_email(email_config: Dict[str, Any], context: Any) -> Dict[str, Any]:
         print(f"Generated subject: {subject}")
 
     # Send the email
-    result = send_email_via_smtp(to_email, subject, content, from_email, password)
+    # Check if email_config specifies content format, otherwise use 'auto'
+    content_format = email_config.get("content_format", "auto")
+    result = send_email_via_smtp(to_email, subject, content, from_email, password, content_format)
 
     if result["success"]:
         result["processing_duration"] = time.time() - start_time
@@ -214,6 +421,8 @@ def main():
     parser.add_argument('--content', type=str, required=True, help='Email content')
     parser.add_argument('--from-email', type=str, help='Sender email address (optional, uses env var if not provided)')
     parser.add_argument('--password', type=str, help='Email password/app key (optional, uses env var if not provided)')
+    parser.add_argument('--content-format', type=str, default='auto', choices=['auto', 'markdown', 'html', 'plain'],
+                       help="Format of the content: 'auto' (detect automatically), 'markdown', 'html', or 'plain' (default: auto)")
 
     args = parser.parse_args()
 
@@ -237,7 +446,8 @@ def main():
         "subject": args.subject,
         "content": args.content,
         "from_email": args.from_email,
-        "password": args.password
+        "password": args.password,
+        "content_format": args.content_format
     }
 
     # Call the email sending function
