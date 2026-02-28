@@ -1,3 +1,8 @@
+---
+name: searxng-analyzer
+description: Analyzes SearXNG search results by fetching content from detailed list URLs, extracting key details, and summarizing the information using qwen3-max in markdown format. Features dual access mechanisms with automatic fallback to handle anti-bot protections. Use when users want to deeply analyze SearXNG search results by fetching and summarizing content from the linked URLs.
+---
+
 # SearXNG Analyzer
 
 ## Description
