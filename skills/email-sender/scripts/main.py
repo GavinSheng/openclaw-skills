@@ -44,32 +44,94 @@ def markdown_to_html(markdown_text: str) -> str:
             'md_in_html'    # Markdown in HTML blocks
         ])
     except ImportError:
-        # Basic fallback conversion if markdown library is not available
+        # Enhanced fallback conversion if markdown library is not available
         import re
 
-        # First, handle code blocks (these should be processed first to avoid interference)
-        # Process fenced code blocks: ```lang ... ```
-        def code_block_replacer(match):
-            lang = match.group(1) if match.group(1) else ''
-            code = match.group(2)
-            # Escape HTML entities in code blocks
-            code = code.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-            return f'<pre><code class="language-{lang}">{code}</code></pre>'
-
-        # Handle fenced code blocks (```lang\n...\n```)
-        markdown_text = re.sub(r'```(\w+)?\n(.*?)```', code_block_replacer, markdown_text, flags=re.DOTALL)
-
-        # Split the text into lines for processing
+        # Process the content by splitting into lines
         lines = markdown_text.split('\n')
         html_lines = []
+        i = 0
 
-        in_list = False
-        list_type = ''  # 'ul' for unordered, 'ol' for ordered
+        while i < len(lines):
+            line = lines[i].rstrip()  # Remove trailing whitespace
 
-        for line in lines:
-            # Check if this is a code block line (already processed)
-            if '<pre><code' in line:
-                html_lines.append(line)
+            # Look for tables: lines starting with | and containing | separators
+            table_pattern = r'^\s*\|(.+)\|\s*$'
+            is_table_line = re.match(table_pattern, line)
+
+            # Check if this could be part of a table block
+            if is_table_line:
+                # Collect all consecutive table lines
+                table_start = i
+                table_content = []
+
+                while i < len(lines):
+                    current_line = lines[i].rstrip()
+                    current_is_table = re.match(table_pattern, current_line)
+
+                    if not current_is_table:
+                        # Break if this line is not part of a table and we've seen some table lines
+                        if table_content:
+                            break
+
+                    if current_is_table:
+                        table_content.append(current_line)
+                        i += 1
+                    else:
+                        break
+
+                # Process the collected table content
+                if len(table_content) >= 2:  # Need at least header and separator or header and data
+                    # Find the header row (first row that is not a separator)
+                    header_row = None
+                    data_rows = []
+
+                    for table_line in table_content:
+                        # Skip separator lines (those with only dashes and pipes)
+                        if re.match(r'^\s*\|:?[-]+:?(?:\s*\|\s*:?[-]+:?)*\|\s*$', table_line):
+                            continue
+
+                        # This is a content row
+                        raw_cells = re.match(table_pattern, table_line).group(1).split('|')
+                        cells = [cell.strip() for cell in raw_cells if cell.strip()]
+
+                        if header_row is None:
+                            # This is the header row
+                            cell_tags = ''.join([f'<th>{cell}</th>' for cell in cells])
+                            header_row = f'<tr>{cell_tags}</tr>'
+                        else:
+                            # This is a data row
+                            cell_tags = ''.join([f'<td>{cell}</td>' for cell in cells])
+                            data_rows.append(f'<tr>{cell_tags}</tr>')
+
+                    # Build the table HTML
+                    if header_row:
+                        table_html = '<table><thead>' + header_row + '</thead><tbody>'
+                        table_html += ''.join(data_rows)
+                        table_html += '</tbody></table>'
+                        html_lines.append(table_html)
+
+                continue  # Continue with the outer loop as 'i' is already updated
+
+            # Process fenced code blocks first to avoid interference with other conversions
+            if line.strip().startswith('```'):
+                # Collect the entire code block
+                lang_match = re.match(r'^```(\w+)', line.strip())
+                lang = lang_match.group(1) if lang_match else ''
+
+                i += 1
+                code_lines = []
+                while i < len(lines):
+                    if lines[i].strip().startswith('```'):
+                        break
+                    code_lines.append(lines[i])
+                    i += 1
+
+                if i < len(lines):  # Skip the closing ```
+                    code_content = '\n'.join(code_lines)
+                    escaped_code = code_content.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                    html_lines.append(f'<pre><code class="language-{lang}">{escaped_code}</code></pre>')
+                    i += 1  # Skip closing ```
                 continue
 
             # Process headers (# Header -> <h1>Header</h1>)
@@ -77,73 +139,77 @@ def markdown_to_html(markdown_text: str) -> str:
             if header_match:
                 level = len(header_match.group(1))
                 content = header_match.group(2)
-                line = f'<h{level}>{content}</h{level}>'
-                html_lines.append(line)
+                html_lines.append(f'<h{level}>{content}</h{level}>')
+                i += 1
                 continue
 
-            # Process lists
+            # Process lists - detect and group list items
             ul_match = re.match(r'^(\s*)[-*]\s+(.+)$', line)
             ol_match = re.match(r'^(\s*)([0-9]+)\.\s+(.+)$', line)
 
             if ul_match or ol_match:
-                # Determine list type and content
+                # Determine list type and indentation
                 if ul_match:
                     indent = ul_match.group(1)
                     content = ul_match.group(2)
-                    current_list_type = 'ul'
+                    list_type = 'ul'
                 else:
                     indent = ol_match.group(1)
                     content = ol_match.group(3)
-                    current_list_type = 'ol'
+                    list_type = 'ol'
 
-                # Calculate indent level (2 spaces = 1 level)
-                indent_level = len(indent) // 2
+                # Add opening list tag
+                html_lines.append(f'<{list_type}>')
 
-                # If not in a list or list type changed, close previous list
-                if in_list and list_type != current_list_type:
-                    html_lines.append('</li></ul>' if list_type == 'ul' else '</li></ol>')
-                    in_list = False
+                # Add the first list item
+                html_lines.append(f'<li>{content}</li>')
 
-                # Handle list nesting
-                if not in_list:
-                    # Start new list
-                    list_tag = '<ul>' if current_list_type == 'ul' else '<ol>'
-                    html_lines.append(list_tag)
-                    in_list = True
-                    list_type = current_list_type
+                # Process all subsequent lines that are part of this list
+                i += 1
+                while i < len(lines):
+                    next_line = lines[i].rstrip()
+                    next_ul_match = re.match(r'^(\s*)[-*]\s+(.+)$', next_line)
+                    next_ol_match = re.match(r'^(\s*)([0-9]+)\.\s+(.+)$', next_line)
 
-                # Add the list item
-                html_lines.append(f'<li>{content}')
-            else:
-                # Not a list item - if we were in a list, close it
-                if in_list:
-                    html_lines.append('</li></ul>' if list_type == 'ul' else '</li></ol>')
-                    in_list = False
+                    # Check if next line is also a list item of the same type with same or greater indentation
+                    if ((next_ul_match and list_type == 'ul') or (next_ol_match and list_type == 'ol')) and \
+                       ((next_ul_match and len(next_ul_match.group(1)) >= len(indent)) if next_ul_match else True) and \
+                       ((next_ol_match and len(next_ol_match.group(1)) >= len(indent)) if next_ol_match else True):
 
-                # Process basic inline markdown elements in non-list lines
-                # Bold: **text** or __text__
-                processed_line = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', line)
-                processed_line = re.sub(r'__(.*?)__', r'<strong>\1</strong>', processed_line)
+                        if next_ul_match:
+                            html_lines.append(f'<li>{next_ul_match.group(2)}</li>')
+                        else:
+                            html_lines.append(f'<li>{next_ol_match.group(3)}</li>')
+                        i += 1
+                    else:
+                        # Different content type, end the list
+                        break
 
-                # Italic: *text* or _text_
-                processed_line = re.sub(r'\*(.*?)\*', r'<em>\1</em>', processed_line)
-                processed_line = re.sub(r'_(.*?)_', r'<em>\1</em>', processed_line)
+                # Close the list
+                html_lines.append(f'</{list_type}>')
+                continue
 
-                # Links: [text](url)
-                processed_line = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank">\1</a>', processed_line)
+            # For regular lines, process inline markdown elements
+            # Bold: **text** or __text__
+            processed_line = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', line)
+            processed_line = re.sub(r'__(.*?)__', r'<strong>\1</strong>', processed_line)
 
-                # Inline code: `code`
-                processed_line = re.sub(r'`([^`]+)`', r'<code>\1</code>', processed_line)
+            # Italic: *text* or _text_
+            processed_line = re.sub(r'\*(.*?)\*', r'<em>\1</em>', processed_line)
+            processed_line = re.sub(r'_(.*?)_', r'<em>\1</em>', processed_line)
 
-                # Paragraph tags for non-empty lines that aren't already HTML tags
-                if processed_line.strip() and not processed_line.startswith('<'):
-                    processed_line = f'<p>{processed_line}</p>'
+            # Links: [text](url)
+            processed_line = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank">\1</a>', processed_line)
 
-                html_lines.append(processed_line)
+            # Inline code: `code`
+            processed_line = re.sub(r'`([^`]+)`', r'<code>\1</code>', processed_line)
 
-        # Close any open list at the end
-        if in_list:
-            html_lines.append('</li></ul>' if list_type == 'ul' else '</li></ol>')
+            # Paragraph tags for non-empty lines that aren't already HTML tags
+            if processed_line.strip() and not re.match(r'^\s*<\w+', processed_line):
+                processed_line = f'<p>{processed_line}</p>'
+
+            html_lines.append(processed_line)
+            i += 1
 
         html_text = '\n'.join(html_lines)
 
@@ -163,6 +229,9 @@ def markdown_to_html(markdown_text: str) -> str:
         pre code {{ background: none; padding: 0; }}
         a {{ color: #3498db; text-decoration: none; }}
         a:hover {{ text-decoration: underline; }}
+        table {{ border-collapse: collapse; width: 100%; margin: 10px 0; }}
+        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+        th {{ background-color: #f2f2f2; font-weight: bold; }}
     </style>
 </head>
 <body>
