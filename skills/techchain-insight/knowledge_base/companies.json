@@ -1,0 +1,210 @@
+{
+  "半导体设备": {
+    "A 股": [
+      {"code": "688012", "name": "中微公司", "business": "刻蚀设备", "position": "国内刻蚀龙头"},
+      {"code": "688037", "name": "芯源微", "business": "涂胶显影", "position": "涂胶显影龙头"},
+      {"code": "300316", "name": "晶盛机电", "business": "单晶炉", "position": "晶体生长设备龙头"},
+      {"code": "688072", "name": "拓荆科技", "business": "薄膜沉积", "position": "PECVD 龙头"},
+      {"code": "688120", "name": "华海清科", "business": "CMP", "position": "CMP 设备龙头"},
+      {"code": "300604", "name": "长川科技", "business": "测试设备", "position": "测试设备领先"},
+      {"code": "688001", "name": "华兴源创", "business": "检测设备", "position": "检测设备领先"}
+    ],
+    "美股": [
+      {"code": "ASML", "name": "ASML Holding", "business": "光刻机", "position": "全球光刻机垄断"},
+      {"code": "AMAT", "name": "Applied Materials", "business": "综合设备", "position": "全球最大设备商"},
+      {"code": "LRCX", "name": "Lam Research", "business": "刻蚀/沉积", "position": "刻蚀设备龙头"},
+      {"code": "KLAC", "name": "KLA Corp", "business": "检测设备", "position": "检测设备龙头"},
+      {"code": "TEL", "name": "TE Connectivity", "business": "连接器", "position": "连接器龙头"}
+    ],
+    "港股": [
+      {"code": "00682", "name": "朝威控股", "business": "半导体设备", "position": "设备零部件"}
+    ]
+  },
+  "AI 芯片": {
+    "A 股": [
+      {"code": "688256", "name": "寒武纪", "business": "AI 芯片", "position": "AI 芯片龙头"},
+      {"code": "688041", "name": "海光信息", "business": "CPU/DCU", "position": "国产 CPU 龙头"},
+      {"code": "688008", "name": "澜起科技", "business": "内存接口芯片", "position": "内存接口龙头"},
+      {"code": "300223", "name": "北京君正", "business": "存储/MCU", "position": "存储芯片领先"}
+    ],
+    "美股": [
+      {"code": "NVDA", "name": "NVIDIA", "business": "GPU/AI 芯片", "position": "AI 芯片绝对龙头"},
+      {"code": "AMD", "name": "AMD", "business": "CPU/GPU", "position": "CPU/GPU 双龙头"},
+      {"code": "INTC", "name": "Intel", "business": "CPU/代工", "position": "CPU 传统龙头"},
+      {"code": "AVGO", "name": "Broadcom", "business": "ASIC/网络芯片", "position": "ASIC 定制芯片龙头"},
+      {"code": "QCOM", "name": "Qualcomm", "business": "手机 SoC", "position": "手机芯片龙头"}
+    ],
+    "港股": [
+      {"code": "09988", "name": "阿里巴巴", "business": "平头哥芯片", "position": "自研 AI 芯片"},
+      {"code": "00700", "name": "腾讯控股", "business": "自研芯片", "position": "视频/AI 芯片"}
+    ]
+  },
+  "动力电池": {
+    "A 股": [
+      {"code": "300750", "name": "宁德时代", "business": "动力电池", "position": "全球动力电池龙头"},
+      {"code": "300014", "name": "亿纬锂能", "business": "动力电池", "position": "动力电池领先"},
+      {"code": "002594", "name": "比亚迪", "business": "电池/整车", "position": "电池 + 整车一体化"},
+      {"code": "688005", "name": "容百科技", "business": "正极材料", "position": "高镍正极龙头"},
+      {"code": "300073", "name": "当升科技", "business": "正极材料", "position": "正极材料领先"},
+      {"code": "600884", "name": "杉杉股份", "business": "负极材料", "position": "负极材料龙头"},
+      {"code": "300037", "name": "新宙邦", "business": "电解液", "position": "电解液龙头"},
+      {"code": "002709", "name": "天赐材料", "business": "电解液", "position": "电解液龙头"},
+      {"code": "300568", "name": "星源材质", "business": "隔膜", "position": "隔膜领先"},
+      {"code": "002812", "name": "恩捷股份", "business": "隔膜", "position": "隔膜龙头"}
+    ],
+    "美股": [
+      {"code": "TSLA", "name": "Tesla", "business": "电池/整车", "position": "电动车 + 储能龙头"},
+      {"code": "ALB", "name": "Albemarle", "business": "锂资源", "position": "全球锂业龙头"},
+      {"code": "SQM", "name": "SQM", "business": "锂资源", "position": "锂业领先"}
+    ],
+    "港股": [
+      {"code": "01211", "name": "比亚迪股份", "business": "电池/整车", "position": "电池 + 整车一体化"},
+      {"code": "03800", "name": "协鑫科技", "business": "硅料", "position": "硅料领先"},
+      {"code": "01772", "name": "赣锋锂业", "business": "锂资源", "position": "锂业龙头"}
+    ]
+  },
+  "锂资源": {
+    "A 股": [
+      {"code": "002460", "name": "赣锋锂业", "business": "锂资源/锂盐", "position": "锂业龙头"},
+      {"code": "002756", "name": "永兴材料", "business": "锂盐", "position": "云母提锂龙头"},
+      {"code": "002240", "name": "盛新锂能", "business": "锂盐", "position": "锂盐领先"},
+      {"code": "002497", "name": "雅化集团", "business": "锂盐", "position": "锂盐领先"}
+    ],
+    "美股": [
+      {"code": "ALB", "name": "Albemarle", "business": "锂资源", "position": "全球锂业龙头"},
+      {"code": "LAC", "name": "Lithium Americas", "business": "锂资源", "position": "锂矿开发"}
+    ],
+    "港股": [
+      {"code": "01772", "name": "赣锋锂业", "business": "锂资源", "position": "锂业龙头"},
+      {"code": "09696", "name": "天齐锂业", "business": "锂资源", "position": "锂业龙头"}
+    ]
+  },
+  "光伏": {
+    "A 股": [
+      {"code": "601012", "name": "隆基绿能", "business": "硅片/组件", "position": "全球光伏龙头"},
+      {"code": "688223", "name": "晶科能源", "business": "组件", "position": "组件龙头"},
+      {"code": "688599", "name": "天合光能", "business": "组件", "position": "组件领先"},
+      {"code": "688472", "name": "阿特斯", "business": "组件", "position": "组件领先"},
+      {"code": "002129", "name": "TCL 中环", "business": "硅片", "position": "硅片双雄"},
+      {"code": "600438", "name": "通威股份", "business": "硅料/电池", "position": "硅料龙头"},
+      {"code": "688390", "name": "固德威", "business": "逆变器", "position": "逆变器领先"},
+      {"code": "300274", "name": "阳光电源", "business": "逆变器", "position": "逆变器龙头"}
+    ],
+    "美股": [
+      {"code": "FSLR", "name": "First Solar", "business": "组件", "position": "薄膜组件龙头"},
+      {"code": "ENPH", "name": "Enphase", "business": "微型逆变器", "position": "微逆龙头"}
+    ],
+    "港股": [
+      {"code": "03800", "name": "协鑫科技", "business": "硅料", "position": "硅料领先"},
+      {"code": "00968", "name": "信义光能", "business": "光伏玻璃", "position": "光伏玻璃龙头"}
+    ]
+  },
+  "激光雷达": {
+    "A 股": [
+      {"code": "688167", "name": "炬光科技", "business": "激光雷达发射模组", "position": "激光雷达上游"},
+      {"code": "688002", "name": "睿创微纳", "business": "红外探测", "position": "红外探测领先"}
+    ],
+    "美股": [
+      {"code": "LAZR", "name": "Luminar", "business": "激光雷达", "position": "激光雷达领先"},
+      {"code": "VLDR", "name": "Velodyne", "business": "激光雷达", "position": "激光雷达先驱"},
+      {"code": "OUST", "name": "Ouster", "business": "激光雷达", "position": "激光雷达领先"}
+    ],
+    "港股": [
+      {"code": "09880", "name": "速腾聚创", "business": "激光雷达", "position": "激光雷达龙头"}
+    ]
+  },
+  "固态电池": {
+    "A 股": [
+      {"code": "300750", "name": "宁德时代", "business": "固态电池研发", "position": "电池龙头布局固态"},
+      {"code": "002594", "name": "比亚迪", "business": "固态电池研发", "position": "电池 + 整车布局"},
+      {"code": "688005", "name": "容百科技", "business": "固态电池材料", "position": "正极材料适配固态"},
+      {"code": "300037", "name": "新宙邦", "business": "固态电解质", "position": "电解液龙头布局固态"}
+    ],
+    "美股": [
+      {"code": "QS", "name": "QuantumScape", "business": "固态电池", "position": "固态电池纯标的"},
+      {"code": "TSLA", "name": "Tesla", "business": "固态电池研发", "position": "电池技术布局"}
+    ],
+    "港股": [
+      {"code": "01211", "name": "比亚迪股份", "business": "固态电池研发", "position": "电池 + 整车布局"}
+    ]
+  },
+  "6G 通信": {
+    "A 股": [
+      {"code": "000063", "name": "中兴通讯", "business": "通信设备", "position": "通信设备龙头"},
+      {"code": "600522", "name": "中天科技", "business": "光纤光缆", "position": "光纤光缆领先"},
+      {"code": "600487", "name": "亨通光电", "business": "光纤光缆", "position": "光纤光缆领先"},
+      {"code": "300628", "name": "亿联网络", "business": "企业通信", "position": "企业通信龙头"}
+    ],
+    "美股": [
+      {"code": "NOK", "name": "Nokia", "business": "通信设备", "position": "通信设备领先"},
+      {"code": "ERIC", "name": "Ericsson", "business": "通信设备", "position": "通信设备领先"},
+      {"code": "QCOM", "name": "Qualcomm", "business": "通信芯片", "position": "通信芯片龙头"}
+    ],
+    "港股": [
+      {"code": "00763", "name": "中兴通讯", "business": "通信设备", "position": "通信设备龙头"},
+      {"code": "00941", "name": "中国移动", "business": "运营商", "position": "运营商龙头"}
+    ]
+  },
+  "量子计算": {
+    "A 股": [
+      {"code": "600905", "name": "三峡能源", "business": "量子通信投资", "position": "量子通信布局"},
+      {"code": "000066", "name": "中国长城", "business": "量子计算研究", "position": "量子计算研究"}
+    ],
+    "美股": [
+      {"code": "IBM", "name": "IBM", "business": "量子计算机", "position": "量子计算领先"},
+      {"code": "GOOGL", "name": "Alphabet", "business": "量子计算", "position": "量子计算领先"},
+      {"code": "IONQ", "name": "IonQ", "business": "量子计算机", "position": "量子计算纯标的"},
+      {"code": "RGTI", "name": "Rigetti", "business": "量子计算机", "position": "量子计算领先"}
+    ],
+    "港股": [
+      {"code": "00700", "name": "腾讯控股", "business": "量子计算研究", "position": "量子计算研究"}
+    ]
+  },
+  "人形机器人": {
+    "A 股": [
+      {"code": "300124", "name": "汇川技术", "business": "伺服系统", "position": "伺服系统龙头"},
+      {"code": "002747", "name": "埃斯顿", "business": "机器人本体", "position": "工业机器人龙头"},
+      {"code": "688017", "name": "绿的谐波", "business": "减速器", "position": "谐波减速器龙头"},
+      {"code": "300607", "name": "拓斯达", "business": "机器人集成", "position": "机器人集成领先"}
+    ],
+    "美股": [
+      {"code": "TSLA", "name": "Tesla", "business": "Optimus 机器人", "position": "人形机器人领先"},
+      {"code": "ISRG", "name": "Intuitive Surgical", "business": "手术机器人", "position": "手术机器人龙头"}
+    ],
+    "港股": [
+      {"code": "09988", "name": "阿里巴巴", "business": "机器人研究", "position": "机器人研究"}
+    ]
+  },
+  "商业航天": {
+    "A 股": [
+      {"code": "600118", "name": "中国卫星", "business": "卫星制造", "position": "卫星制造龙头"},
+      {"code": "600879", "name": "航天电子", "business": "航天电子", "position": "航天电子领先"},
+      {"code": "002151", "name": "北斗星通", "business": "导航定位", "position": "北斗导航龙头"}
+    ],
+    "美股": [
+      {"code": "SPCE", "name": "Virgin Galactic", "business": "太空旅游", "position": "太空旅游领先"},
+      {"code": "RKLB", "name": "Rocket Lab", "business": "火箭发射", "position": "小型火箭发射"}
+    ]
+  },
+  "低空经济": {
+    "A 股": [
+      {"code": "002085", "name": "万丰奥威", "business": "eVTOL", "position": "eVTOL 领先"},
+      {"code": "600893", "name": "航发动力", "business": "航空发动机", "position": "航空发动机龙头"},
+      {"code": "002179", "name": "中航光电", "business": "航空连接器", "position": "航空连接器龙头"}
+    ],
+    "美股": [
+      {"code": "JOBY", "name": "Joby Aviation", "business": "eVTOL", "position": "eVTOL 领先"},
+      {"code": "ACHR", "name": "Archer Aviation", "business": "eVTOL", "position": "eVTOL 领先"}
+    ]
+  },
+  "钙钛矿电池": {
+    "A 股": [
+      {"code": "601012", "name": "隆基绿能", "business": "钙钛矿研发", "position": "光伏龙头布局"},
+      {"code": "688223", "name": "晶科能源", "business": "钙钛矿研发", "position": "组件龙头布局"},
+      {"code": "002129", "name": "TCL 中环", "business": "钙钛矿研发", "position": "硅片龙头布局"}
+    ],
+    "美股": [
+      {"code": "FSLR", "name": "First Solar", "business": "薄膜电池", "position": "薄膜电池龙头"}
+    ]
+  }
+}

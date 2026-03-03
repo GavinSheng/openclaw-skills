@@ -12,7 +12,23 @@ import json
 import sys
 import os
 from typing import Dict, Any
+from pathlib import Path
 import smtplib
+
+# Load .env file from skill directory if exists
+def load_env_file():
+    """Load environment variables from .env file in skill directory."""
+    script_dir = Path(__file__).resolve().parent.parent
+    env_file = script_dir / ".env"
+    if env_file.exists():
+        with open(env_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ.setdefault(key.strip(), value.strip())
+
+load_env_file()
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
@@ -497,13 +513,23 @@ def main():
     parser = argparse.ArgumentParser(description='Email Sender Skill')
     parser.add_argument('--to-email', type=str, required=True, help='Recipient email address')
     parser.add_argument('--subject', type=str, help='Email subject (optional, will be generated if not provided)')
-    parser.add_argument('--content', type=str, required=True, help='Email content')
+    parser.add_argument('--content', type=str, help='Email content (if not provided, read from stdin)')
     parser.add_argument('--from-email', type=str, help='Sender email address (optional, uses env var if not provided)')
     parser.add_argument('--password', type=str, help='Email password/app key (optional, uses env var if not provided)')
     parser.add_argument('--content-format', type=str, default='auto', choices=['auto', 'markdown', 'html', 'plain'],
                        help="Format of the content: 'auto' (detect automatically), 'markdown', 'html', or 'plain' (default: auto)")
 
     args = parser.parse_args()
+
+    # Read content from stdin if not provided via --content
+    content = args.content
+    if not content:
+        import sys
+        content = sys.stdin.read()
+
+    if not content:
+        print(json.dumps({"success": False, "error": "No content provided (via --content or stdin)"}, ensure_ascii=False, indent=2))
+        return
 
     # Mock context object for command-line usage
     class MockContext:
@@ -523,7 +549,7 @@ def main():
     email_config = {
         "to_email": args.to_email,
         "subject": args.subject,
-        "content": args.content,
+        "content": content,
         "from_email": args.from_email,
         "password": args.password,
         "content_format": args.content_format

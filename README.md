@@ -21,7 +21,9 @@ openclaw-skills/
     ├── info-summarization-qwen/                 # 信息总结技能（Qwen版）
     ├── searxng-analyzer/                        # SearXNG分析器
     ├── searxng-article-analyzer/                # SearXNG文章分析器
-    └── email-sender/                            # 邮件发送技能
+    ├── email-sender/                            # 邮件发送技能
+    ├── techchain-insight/                       # 科技链·热点透视技能
+    └── techpulse-scout/                         # 科技脉搏·侦察兵技能
 ```
 
 ## 当前已有的技能
@@ -33,8 +35,10 @@ openclaw-skills/
 - `searxng-article-analyzer`: SearXNG文章分析器，深度分析单篇文章并生成适合公众号发布的概要和详情
 - `email-sender`: 邮件发送技能，将其他技能的执行结果发送到指定邮箱
 - `skill-creator`: 技能创建工具，用于快速创建和打包新的技能
+- `techchain-insight`: 科技链·热点透视技能，实时捕捉科技圈热点新闻，深度拆解产业链利益链条，精准映射至全球资本市场上市公司
+- `techpulse-scout`: 科技脉搏·侦察兵技能，轻量级、高频次、广覆盖的信息过滤器，全网扫描科技热点，去重过滤，重要性评分
 
-## 安装依赖
+# 安装依赖
 
 ```bash
 # 为web-info-search技能安装依赖
@@ -55,7 +59,21 @@ playwright install
 # 为searxng-article-analyzer技能安装依赖
 pip install -r skills/searxng-article-analyzer/requirements.txt
 playwright install
+
+# 为email-sender技能安装依赖
+pip install -r skills/email-sender/requirements.txt
+
+# 为techchain-insight和techpulse-scout技能安装依赖
+pip install -r skills/techchain-insight/requirements.txt
+pip install -r skills/techpulse-scout/requirements.txt
 ```
+
+## 配置敏感信息
+
+对于需要发送邮件的技能（如techchain-insight），请确保配置适当的环境变量而不是在代码中硬编码敏感信息：
+
+1. 创建 `.env` 文件或设置系统环境变量
+2. 对于 `techchain-insight`，设置 `TECHCHAIN_REPORT_EMAIL` 环境变量
 
 ## 使用方法
 
@@ -73,15 +91,6 @@ playwright install
 - **智能回退**: 当遇到401/403/406/429错误或检测到反爬虫机制时自动切换到浏览器自动化
 - **支持的防护**: 有效应对Datadome、CloudFront、验证码和其他反机器人系统
 
-## 阿里云MoltBot平台集成
-
-所有技能都已更新以支持阿里云MoltBot平台的标准接口：
-
-- 每个技能的 `main.py` 脚本都实现了 `handler(request, context)` 函数
-- 使用 `context.llm.generate()` 调用大语言模型
-- 支持标准的 `model`、`temperature`、`max_tokens` 参数
-- 所有技能均使用 `qwen3-max-2026-01-23` 模型ID
 
 ## 项目目的
-
-这个项目旨在集中管理和存放所有 OpenClaw 使用的技能，便于维护和复用。所有技能都已经适配阿里云MoltBot平台，可以在该平台上直接运行并利用大语言模型的强大能力。
+这个项目旨在集中管理和存放所有 OpenClaw 使用的技能，便于维护和复用。
